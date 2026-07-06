@@ -1,0 +1,32 @@
+# ==========================
+# ANGULAR
+# ==========================
+frontend/ecoinventory-frontend/node_modules/
+frontend/ecoinventory-frontend/dist/
+frontend/ecoinventory-frontend/.angular/
+frontend/ecoinventory-frontend/coverage/
+
+# ==========================
+# SPRING BOOT
+# ==========================
+backend/EcoInventoryPro/target/
+backend/EcoInventoryPro/.mvn/
+
+# ==========================
+# IDEs
+# ==========================
+.vscode/
+.idea/
+*.iml
+nbproject/private/
+
+# ==========================
+# LOGS
+# ==========================
+*.log
+
+# ==========================
+# SISTEMA
+# ==========================
+.DS_Store
+Thumbs.db
