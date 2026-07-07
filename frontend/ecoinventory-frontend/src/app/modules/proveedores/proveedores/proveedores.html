@@ -1,0 +1,203 @@
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">EcoInventory</h2>
+    <nav>
+      <a routerLink="/dashboard">🏠 Dashboard</a>
+      <a routerLink="/productos">📦 Productos</a>
+      <a routerLink="/categorias">📂 Categorías</a>
+      <a routerLink="/marcas">🏷️ Marcas</a>
+      <a routerLink="/proveedores" class="active">🚚 Proveedores</a>
+      <a routerLink="/movimientos">📊 Movimientos</a>
+      <a routerLink="/reportes">📈 Reportes</a>
+      <a routerLink="/usuarios">👤 Usuarios</a>
+      <a (click)="logout()" style="cursor: pointer;">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1>🚚 Proveedores</h1>
+        <p class="text-muted">Gestiona los proveedores de tus productos</p>
+      </div>
+      <button class="btn-primary" (click)="abrirModal()">
+        <span class="btn-icon">+</span> Nuevo Proveedor
+      </button>
+    </header>
+
+    <!-- Tarjetas de Resumen -->
+    <section class="summary-cards">
+      <div class="summary-card total">
+        <div class="summary-icon">🚚</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ proveedores.length }}</span>
+          <span class="summary-label">Total Proveedores</span>
+        </div>
+      </div>
+      <div class="summary-card activos">
+        <div class="summary-icon">✅</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ proveedoresActivos }}</span>
+          <span class="summary-label">Activos</span>
+        </div>
+      </div>
+      <div class="summary-card inactivos">
+        <div class="summary-icon">⏸️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ proveedoresInactivos }}</span>
+          <span class="summary-label">Inactivos</span>
+        </div>
+      </div>
+      <div class="summary-card productos">
+        <div class="summary-icon">📦</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalProductos }}</span>
+          <span class="summary-label">Productos Asociados</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filtros y Búsqueda -->
+    <section class="filters-section">
+      <div class="filters-row">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="busqueda"
+            (input)="aplicarFiltros()"
+            placeholder="Buscar por nombre, RUC o correo..."
+            class="search-input"
+          >
+        </div>
+
+        <div class="filter-group">
+          <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()" class="filter-select">
+            <option value="">Todos los estados</option>
+            <option value="activo">✅ Activos</option>
+            <option value="inactivo">⏸️ Inactivos</option>
+          </select>
+        </div>
+
+        <button class="btn-clear" (click)="limpiarFiltros()" *ngIf="filtrosActivos">
+          <span>✕</span> Limpiar filtros
+        </button>
+      </div>
+    </section>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando proveedores...</p>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!loading" class="table-container">
+      <div class="table-header">
+        <span class="table-count">{{ proveedoresFiltrados.length }} proveedores</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>RUC</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of proveedoresFiltrados">
+              <td><span class="id-badge">#{{ p.id }}</span></td>
+              <td><strong class="proveedor-name">{{ p.nombre }}</strong></td>
+              <td>{{ p.ruc || '-' }}</td>
+              <td>{{ p.telefono || '-' }}</td>
+              <td>{{ p.correo || '-' }}</td>
+              <td>
+                <span class="status-badge" [class.active]="p.estado !== false">
+                  {{ p.estado !== false ? '✅ Activo' : '⏸️ Inactivo' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn-toggle" (click)="toggleEstado(p)" [title]="p.estado !== false ? 'Desactivar' : 'Activar'">
+                  {{ p.estado !== false ? '🔴' : '🟢' }}
+                </button>
+                <button class="btn-edit" (click)="abrirModal(p)" title="Editar">✏️</button>
+                <button class="btn-delete" (click)="eliminarProveedor(p.id, p.nombre)" title="Eliminar">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="proveedoresFiltrados.length === 0">
+              <td colspan="7" class="text-center text-muted">
+                <div class="empty-state">
+                  <span class="empty-icon">🚚</span>
+                  <p>No hay proveedores que coincidan con los filtros</p>
+                  <button class="btn-clear" (click)="limpiarFiltros()">Limpiar filtros</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" *ngIf="modalVisible" (click)="cerrarModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ esEdicion ? '✏️ Editar' : '➕ Nuevo' }} Proveedor</h3>
+          <button class="btn-close" (click)="cerrarModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div *ngFor="let error of formErrors" class="error-msg">{{ error }}</div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1; margin-right: 10px;">
+              <label>Nombre *</label>
+              <input type="text" [(ngModel)]="proveedorSeleccionado.nombre" placeholder="Tecnología SAC">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>RUC</label>
+              <input type="text" [(ngModel)]="proveedorSeleccionado.ruc" placeholder="20456789012">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1; margin-right: 10px;">
+              <label>Teléfono</label>
+              <input type="text" [(ngModel)]="proveedorSeleccionado.telefono" placeholder="987654321">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Correo</label>
+              <input type="email" [(ngModel)]="proveedorSeleccionado.correo" placeholder="contacto@empresa.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Dirección</label>
+            <input type="text" [(ngModel)]="proveedorSeleccionado.direccion" placeholder="Av. Principal 123">
+          </div>
+
+          <div class="form-group">
+            <label>Descripción</label>
+            <textarea [(ngModel)]="proveedorSeleccionado.descripcion" placeholder="Descripción opcional"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+          <button class="btn-primary" (click)="guardarProveedor()" [disabled]="loading">
+            {{ loading ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,180 @@
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">📦 EcoInventory</h2>
+    <nav>
+      <a routerLink="/dashboard">🏠 Dashboard</a>
+      <a routerLink="/productos">📦 Productos</a>
+      <a routerLink="/categorias">📂 Categorías</a>
+      <a routerLink="/marcas">🏷️ Marcas</a>
+      <a routerLink="/proveedores">🚚 Proveedores</a>
+      <a routerLink="/movimientos">📊 Movimientos</a>
+      <a routerLink="/usuarios">👤 Usuarios</a>
+      <a routerLink="/reportes" class="active">📈 Reportes</a>
+      <a (click)="logout()" style="cursor: pointer;">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <h1>📈 Centro de Reportes</h1>
+        <p class="text-muted">Genera reportes personalizados de tu inventario</p>
+      </div>
+      <div class="date-badge">{{ fechaActual | date:'dd/MM/yyyy HH:mm' }}</div>
+    </header>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Cards de Resumen -->
+    <section class="summary-cards" *ngIf="!loading">
+      <div class="summary-card" style="background: linear-gradient(135deg, #1a237e, #0d47a1);">
+        <div class="summary-icon">📦</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ productos.length }}</span>
+          <span class="summary-label">Productos</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+        <div class="summary-icon">⚠️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ productosStockBajo.length }}</span>
+          <span class="summary-label">Stock Bajo</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+        <div class="summary-icon">📂</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ categorias.length }}</span>
+          <span class="summary-label">Categorías</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+        <div class="summary-icon">📊</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ movimientos.length }}</span>
+          <span class="summary-label">Movimientos</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel de Reportes -->
+    <section class="reports-panel" *ngIf="!loading">
+      <div class="panel-header">
+        <h2>📋 Generar Reporte</h2>
+        <p>Selecciona el tipo de reporte y sus filtros</p>
+      </div>
+
+      <!-- Selector de Tipo de Reporte -->
+      <div class="report-selector">
+        <button *ngFor="let r of reportTypes" 
+                class="report-btn" 
+                [class.active]="selectedReport === r.value"
+                (click)="selectReport(r.value)">
+          <span class="report-icon">{{ r.icon }}</span>
+          {{ r.label }}
+          <span class="report-count">({{ getCount(r.value) }})</span>
+        </button>
+      </div>
+
+      <!-- Panel de Filtros y Configuración -->
+      <div class="filters-panel" *ngIf="selectedReport">
+        <div class="filters-grid">
+          <!-- Filtros específicos por tipo -->
+          <div *ngIf="selectedReport === 'productos'" class="filter-group">
+            <label>🔍 Filtrar por</label>
+            <select [(ngModel)]="filtroProducto.categoria">
+              <option value="">Todas las categorías</option>
+              <option *ngFor="let c of categorias" [value]="c.nombre">{{ c.nombre }}</option>
+            </select>
+            <select [(ngModel)]="filtroProducto.marca">
+              <option value="">Todas las marcas</option>
+              <option *ngFor="let m of marcas" [value]="m.nombre">{{ m.nombre }}</option>
+            </select>
+          </div>
+
+          <div *ngIf="selectedReport === 'movimientos'" class="filter-group">
+            <label>📅 Rango de fechas</label>
+            <input type="date" [(ngModel)]="fechaInicio">
+            <span>→</span>
+            <input type="date" [(ngModel)]="fechaFin">
+            <select [(ngModel)]="filtroMovimiento.tipo">
+              <option value="">Todos los tipos</option>
+              <option value="ENTRADA">Entradas</option>
+              <option value="SALIDA">Salidas</option>
+            </select>
+          </div>
+
+          <div *ngIf="selectedReport === 'proveedores'" class="filter-group">
+            <label>🔍 Buscar proveedor</label>
+            <input type="text" [(ngModel)]="filtroProveedor.busqueda" placeholder="Nombre, RUC, correo...">
+          </div>
+
+          <div *ngIf="selectedReport === 'usuarios'" class="filter-group">
+            <label>👤 Filtrar por rol</label>
+            <select [(ngModel)]="filtroUsuario.rol">
+              <option value="">Todos los roles</option>
+              <option *ngFor="let r of roles" [value]="r.nombre">{{ r.nombre }}</option>
+            </select>
+          </div>
+
+          <!-- Selector de Columnas a Imprimir -->
+          <div class="filter-group columns-selector">
+            <label>📋 Columnas a incluir</label>
+            <div class="columns-checkbox">
+              <label *ngFor="let col of getColumnasDisponibles()">
+                <input type="checkbox" [(ngModel)]="col.checked"> {{ col.label }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="actions-row">
+          <button class="btn-generate" (click)="generarReporte()">
+            <span>📄</span> Generar Reporte
+          </button>
+          <button class="btn-export" (click)="exportarExcel()">
+            <span>📊</span> Exportar Excel
+          </button>
+          <button class="btn-reset" (click)="resetFiltros()">
+            <span>🔄</span> Reiniciar
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista Previa de Datos -->
+      <div class="preview-panel" *ngIf="selectedReport">
+        <div class="preview-header">
+          <h3>👁️ Vista Previa</h3>
+          <span class="preview-count">{{ getDatosFiltrados().length }} registros</span>
+        </div>
+        <div class="table-container">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th *ngFor="let col of getColumnasVisibles()">{{ col.label }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of getDatosFiltrados() | slice:0:10">
+                <td *ngFor="let col of getColumnasVisibles()">{{ getValor(item, col.key) }}</td>
+              </tr>
+              <tr *ngIf="getDatosFiltrados().length > 10">
+                <td [attr.colspan]="getColumnasVisibles().length" class="text-muted">
+                  ... y {{ getDatosFiltrados().length - 10 }} más
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

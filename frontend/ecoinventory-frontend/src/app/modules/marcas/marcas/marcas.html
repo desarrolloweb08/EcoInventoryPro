@@ -1,0 +1,167 @@
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">EcoInventory</h2>
+    <nav>
+      <a routerLink="/dashboard">🏠 Dashboard</a>
+      <a routerLink="/productos">📦 Productos</a>
+      <a routerLink="/categorias">📂 Categorías</a>
+      <a routerLink="/marcas" class="active">🏷️ Marcas</a>
+      <a routerLink="/proveedores">🚚 Proveedores</a>
+      <a routerLink="/movimientos">📊 Movimientos</a>
+      <a routerLink="/reportes">📈 Reportes</a>
+      <a routerLink="/usuarios">👤 Usuarios</a>
+      <a (click)="logout()" style="cursor: pointer;">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1>🏷️ Marcas</h1>
+        <p class="text-muted">Gestiona las marcas de tus productos</p>
+      </div>
+      <button class="btn-primary" (click)="abrirModal()">
+        <span class="btn-icon">+</span> Nueva Marca
+      </button>
+    </header>
+
+    <!-- Tarjetas de Resumen -->
+    <section class="summary-cards">
+      <div class="summary-card total">
+        <div class="summary-icon">🏷️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ marcas.length }}</span>
+          <span class="summary-label">Total Marcas</span>
+        </div>
+      </div>
+      <div class="summary-card productos">
+        <div class="summary-icon">📦</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalProductos }}</span>
+          <span class="summary-label">Productos Asociados</span>
+        </div>
+      </div>
+      <div class="summary-card activas">
+        <div class="summary-icon">✅</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ marcasActivas }}</span>
+          <span class="summary-label">Marcas Activas</span>
+        </div>
+      </div>
+      <div class="summary-card inactivas">
+        <div class="summary-icon">⏸️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ marcasInactivas }}</span>
+          <span class="summary-label">Marcas Inactivas</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filtros y Búsqueda -->
+    <section class="filters-section">
+      <div class="filters-row">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="busqueda"
+            (input)="aplicarFiltros()"
+            placeholder="Buscar marca por nombre..."
+            class="search-input"
+          >
+        </div>
+        <button class="btn-clear" (click)="limpiarFiltros()" *ngIf="filtrosActivos">
+          <span>✕</span> Limpiar filtros
+        </button>
+      </div>
+    </section>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando marcas...</p>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!loading" class="table-container">
+      <div class="table-header">
+        <span class="table-count">{{ marcasFiltradas.length }} marcas</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of marcasFiltradas">
+              <td><span class="id-badge">#{{ m.id }}</span></td>
+              <td><strong class="marca-name">{{ m.nombre }}</strong></td>
+              <td>{{ m.descripcion || '-' }}</td>
+              <td>
+                <span class="status-badge" [class.active]="m.estado !== false">
+                  {{ m.estado !== false ? '✅ Activa' : '⏸️ Inactiva' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn-toggle" (click)="toggleEstado(m)" [title]="m.estado !== false ? 'Desactivar' : 'Activar'">
+                  {{ m.estado !== false ? '🔴' : '🟢' }}
+                </button>
+                <button class="btn-edit" (click)="abrirModal(m)" title="Editar">✏️</button>
+                <button class="btn-delete" (click)="eliminarMarca(m.id, m.nombre)" title="Eliminar">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="marcasFiltradas.length === 0">
+              <td colspan="5" class="text-center text-muted">
+                <div class="empty-state">
+                  <span class="empty-icon">🏷️</span>
+                  <p>No hay marcas que coincidan con los filtros</p>
+                  <button class="btn-clear" (click)="limpiarFiltros()">Limpiar filtros</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" *ngIf="modalVisible" (click)="cerrarModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ esEdicion ? '✏️ Editar' : '➕ Nueva' }} Marca</h3>
+          <button class="btn-close" (click)="cerrarModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div *ngFor="let error of formErrors" class="error-msg">{{ error }}</div>
+
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" [(ngModel)]="marcaSeleccionada.nombre" placeholder="Ej: Samsung">
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <textarea [(ngModel)]="marcaSeleccionada.descripcion" placeholder="Descripción opcional"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+          <button class="btn-primary" (click)="guardarMarca()" [disabled]="loading">
+            {{ loading ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>EcoInventory Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f8;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-container {
+      display: flex;
+      width: 900px;
+      max-width: 95%;
+      min-height: 550px;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+
+    .login-left {
+      flex: 1;
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      padding: 48px 32px;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .login-left .logo-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .login-left h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-left p {
+      font-size: 16px;
+      opacity: 0.8;
+      line-height: 1.6;
+      max-width: 300px;
+    }
+
+    .login-left .features {
+      margin-top: 32px;
+      list-style: none;
+    }
+
+    .login-left .features li {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .login-left .features li span {
+      font-size: 20px;
+    }
+
+    .login-right {
+      flex: 1;
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .login-right h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .login-right .subtitle {
+      color: #64748b;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      color: #1e293b;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.2s;
+      background: #f8fafc;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #1a237e;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(26, 35, 126, 0.1);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(26, 35, 126, 0.3);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .login-footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+      .login-container {
+        flex-direction: column;
+        min-height: auto;
+      }
+
+      .login-left {
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      .login-left .features {
+        display: none;
+      }
+
+      .login-right {
+        padding: 32px 24px;
+      }
+
+      .login-left h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="login-container">
+  <!-- Lado izquierdo - Branding -->
+  <div class="login-left">
+    <div class="logo-icon">📦</div>
+    <h1>EcoInventory Pro</h1>
+    <p>Control inteligente de inventario para tu negocio.</p>
+    <ul class="features">
+      <li><span>✅</span> Gestión de productos y stock</li>
+      <li><span>✅</span> Control de movimientos</li>
+      <li><span>✅</span> Reportes en tiempo real</li>
+      <li><span>✅</span> Seguridad y roles</li>
+    </ul>
+  </div>
+
+  <!-- Lado derecho - Formulario -->
+  <div class="login-right">
+    <h2>Bienvenido</h2>
+    <p class="subtitle">Ingresa tus credenciales para continuar</p>
+
+    <div id="errorMessage" class="error-message">Credenciales incorrectas</div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input
+          type="text"
+          [(ngModel)]="username"
+          name="username"
+          placeholder="Ingresa tu usuario"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Ingresa tu contraseña"
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn-login" [disabled]="loading">
+        {{ loading ? 'Cargando...' : 'Iniciar Sesión' }}
+      </button>
+    </form>
+
+    <div class="login-footer">
+      Sistema de Control de Inventario &copy; 2026
+    </div>
+  </div>
+</div>
+</body>
+</html>

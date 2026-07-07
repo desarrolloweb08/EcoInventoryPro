@@ -1,0 +1,232 @@
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">EcoInventory</h2>
+    <nav>
+      <a routerLink="/dashboard">🏠 Dashboard</a>
+      <a routerLink="/productos">📦 Productos</a>
+      <a routerLink="/categorias">📂 Categorías</a>
+      <a routerLink="/marcas">🏷️ Marcas</a>
+      <a routerLink="/proveedores">🚚 Proveedores</a>
+      <a routerLink="/movimientos">📊 Movimientos</a>
+      <a routerLink="/reportes">📈 Reportes</a>
+      <a routerLink="/usuarios" class="active">👤 Usuarios</a>
+      <a (click)="logout()" style="cursor: pointer;">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1>👤 Gestión de Usuarios</h1>
+        <p class="text-muted">Administra los usuarios del sistema</p>
+      </div>
+      <button class="btn-primary" (click)="abrirModal()">
+        <span class="btn-icon">+</span> Nuevo Usuario
+      </button>
+    </header>
+
+    <!-- Tarjetas de Resumen -->
+    <section class="summary-cards">
+      <div class="summary-card total">
+        <div class="summary-icon">👤</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ usuarios.length }}</span>
+          <span class="summary-label">Total Usuarios</span>
+        </div>
+      </div>
+      <div class="summary-card activos">
+        <div class="summary-icon">✅</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ usuariosActivos }}</span>
+          <span class="summary-label">Activos</span>
+        </div>
+      </div>
+      <div class="summary-card inactivos">
+        <div class="summary-icon">⏸️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ usuariosInactivos }}</span>
+          <span class="summary-label">Inactivos</span>
+        </div>
+      </div>
+      <div class="summary-card roles">
+        <div class="summary-icon">🎯</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ roles.length }}</span>
+          <span class="summary-label">Roles</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gráfico de Distribución de Roles -->
+    <section class="chart-section">
+      <div class="chart-card">
+        <h4>📊 Distribución de Usuarios por Rol</h4>
+        <div class="chart-container">
+          <canvas #chartRoles></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filtros y Búsqueda -->
+    <section class="filters-section">
+      <div class="filters-row">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="busqueda"
+            (input)="aplicarFiltros()"
+            placeholder="Buscar por nombre, username o correo..."
+            class="search-input"
+          >
+        </div>
+
+        <div class="filter-group">
+          <select [(ngModel)]="filtroRol" (change)="aplicarFiltros()" class="filter-select">
+            <option value="">Todos los roles</option>
+            <option *ngFor="let r of roles" [value]="r.nombre">{{ r.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()" class="filter-select">
+            <option value="">Todos los estados</option>
+            <option value="activo">✅ Activos</option>
+            <option value="inactivo">⏸️ Inactivos</option>
+          </select>
+        </div>
+
+        <button class="btn-clear" (click)="limpiarFiltros()" *ngIf="filtrosActivos">
+          <span>✕</span> Limpiar filtros
+        </button>
+      </div>
+    </section>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando usuarios...</p>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!loading" class="table-container">
+      <div class="table-header">
+        <span class="table-count">{{ usuariosFiltrados.length }} usuarios</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Username</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of usuariosFiltrados">
+              <td>
+                <div class="user-avatar" [style.background]="getColor(u.nombres)">
+                  {{ u.nombres?.charAt(0) }}{{ u.apellidos?.charAt(0) }}
+                </div>
+              </td>
+              <td><strong>{{ u.nombres }} {{ u.apellidos }}</strong></td>
+              <td>@{{ u.username }}</td>
+              <td>{{ u.correo }}</td>
+              <td>
+                <span class="role-badge" [class.super-admin]="u.rol === 'SUPER_ADMIN'" 
+                                         [class.admin]="u.rol === 'ADMIN'"
+                                         [class.user]="u.rol === 'USUARIO'">
+                  {{ u.rol || 'USUARIO' }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [class.active]="u.estado !== false">
+                  {{ u.estado !== false ? '✅ Activo' : '⏸️ Inactivo' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <button class="btn-toggle" (click)="toggleEstado(u)" [title]="u.estado !== false ? 'Desactivar' : 'Activar'">
+                  {{ u.estado !== false ? '🔴' : '🟢' }}
+                </button>
+                <button class="btn-edit" (click)="abrirModal(u)" title="Editar">✏️</button>
+                <button class="btn-delete" (click)="eliminarUsuario(u.id, u.nombres)" title="Eliminar">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="usuariosFiltrados.length === 0">
+              <td colspan="7" class="text-center text-muted">
+                <div class="empty-state">
+                  <span class="empty-icon">👤</span>
+                  <p>No hay usuarios que coincidan con los filtros</p>
+                  <button class="btn-clear" (click)="limpiarFiltros()">Limpiar filtros</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" *ngIf="modalVisible" (click)="cerrarModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ esEdicion ? '✏️ Editar' : '➕ Nuevo' }} Usuario</h3>
+          <button class="btn-close" (click)="cerrarModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div *ngFor="let error of formErrors" class="error-msg">{{ error }}</div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1; margin-right: 10px;">
+              <label>Nombres *</label>
+              <input type="text" [(ngModel)]="usuarioSeleccionado.nombres" placeholder="Juan">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Apellidos *</label>
+              <input type="text" [(ngModel)]="usuarioSeleccionado.apellidos" placeholder="Pérez">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Username *</label>
+            <input type="text" [(ngModel)]="usuarioSeleccionado.username" placeholder="juanperez">
+          </div>
+
+          <div class="form-group">
+            <label>Correo *</label>
+            <input type="email" [(ngModel)]="usuarioSeleccionado.correo" placeholder="juan@email.com">
+          </div>
+
+          <div class="form-group">
+            <label>Contraseña {{ esEdicion ? '(Dejar en blanco para no cambiar)' : '*' }}</label>
+            <input type="password" [(ngModel)]="usuarioSeleccionado.password" placeholder="Ingrese contraseña">
+          </div>
+
+          <div class="form-group">
+            <label>Rol *</label>
+            <select [(ngModel)]="usuarioSeleccionado.rolId">
+              <option [value]="null">Seleccionar rol</option>
+              <option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+          <button class="btn-primary" (click)="guardarUsuario()" [disabled]="loading">
+            {{ loading ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,269 @@
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">EcoInventory</h2>
+    <nav>
+      <a routerLink="/dashboard">🏠 Dashboard</a>
+      <a routerLink="/productos">📦 Productos</a>
+      <a routerLink="/categorias">📂 Categorías</a>
+      <a routerLink="/marcas">🏷️ Marcas</a>
+      <a routerLink="/proveedores">🚚 Proveedores</a>
+      <a routerLink="/movimientos" class="active">📊 Movimientos</a>
+      <a routerLink="/reportes">📈 Reportes</a>
+      <a routerLink="/usuarios">👤 Usuarios</a>
+      <a (click)="logout()" style="cursor: pointer;">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1>📊 Movimientos de Inventario</h1>
+        <p class="text-muted">Registra y filtra entradas y salidas de productos</p>
+      </div>
+      <button class="btn-primary" (click)="abrirModal()">
+        <span class="btn-icon">+</span> Nuevo Movimiento
+      </button>
+    </header>
+
+    <!-- Tarjetas de Resumen -->
+    <section class="summary-cards">
+      <div class="summary-card total">
+        <div class="summary-icon">📊</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ movimientos.length }}</span>
+          <span class="summary-label">Total Movimientos</span>
+        </div>
+      </div>
+      <div class="summary-card entradas">
+        <div class="summary-icon">⬆️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalEntradas }}</span>
+          <span class="summary-label">Entradas</span>
+        </div>
+      </div>
+      <div class="summary-card salidas">
+        <div class="summary-icon">⬇️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalSalidas }}</span>
+          <span class="summary-label">Salidas</span>
+        </div>
+      </div>
+      <div class="summary-card hoy">
+        <div class="summary-icon">📅</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ movimientosHoy }}</span>
+          <span class="summary-label">Movimientos Hoy</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FILTROS AVANZADOS -->
+    <section class="filters-section">
+      <div class="filters-container">
+        
+        <!-- Fila 1: Búsqueda y Filtros Principales -->
+        <div class="filters-row">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              [(ngModel)]="busqueda"
+              (input)="aplicarFiltros()"
+              placeholder="Buscar por producto o código..."
+              class="search-input"
+            >
+          </div>
+
+          <div class="filter-group">
+            <select [(ngModel)]="filtroTipo" (change)="aplicarFiltros()" class="filter-select">
+              <option value="">Todos los tipos</option>
+              <option value="ENTRADA">⬆️ Entradas</option>
+              <option value="SALIDA">⬇️ Salidas</option>
+            </select>
+          </div>
+
+          <button class="btn-clear" (click)="limpiarFiltros()" *ngIf="filtrosActivos">
+            <span>✕</span> Limpiar filtros
+          </button>
+        </div>
+
+        <!-- Fila 2: Filtros Avanzados -->
+        <div class="filters-row advanced">
+          <!-- Rango de Fechas -->
+          <div class="filter-group date-group">
+            <label>📅 Desde</label>
+            <input type="date" [(ngModel)]="fechaInicio" (change)="aplicarFiltros()" class="date-input">
+            <label>Hasta</label>
+            <input type="date" [(ngModel)]="fechaFin" (change)="aplicarFiltros()" class="date-input">
+          </div>
+
+          <!-- Filtro por Producto -->
+          <div class="filter-group">
+            <label>📦 Producto</label>
+            <select [(ngModel)]="filtroProductoId" (change)="aplicarFiltros()" class="filter-select">
+              <option [value]="null">Todos los productos</option>
+              <option *ngFor="let p of productos" [value]="p.id">
+                {{ p.codigo }} - {{ p.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Filtro por Categoría -->
+          <div class="filter-group">
+            <label>📂 Categoría</label>
+            <select [(ngModel)]="filtroCategoriaId" (change)="aplicarFiltros()" class="filter-select">
+              <option [value]="null">Todas las categorías</option>
+              <option *ngFor="let c of categorias" [value]="c.id">{{ c.nombre }}</option>
+            </select>
+          </div>
+
+          <!-- Filtro por Marca -->
+          <div class="filter-group">
+            <label>🏷️ Marca</label>
+            <select [(ngModel)]="filtroMarcaId" (change)="aplicarFiltros()" class="filter-select">
+              <option [value]="null">Todas las marcas</option>
+              <option *ngFor="let m of marcas" [value]="m.id">{{ m.nombre }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Contador de filtros activos -->
+        <div class="filters-badge" *ngIf="filtrosActivos">
+          <span class="badge-count">{{ contarFiltrosActivos() }} filtros activos</span>
+          <button class="btn-clear-small" (click)="limpiarFiltros()">✕</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando movimientos...</p>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!loading" class="table-container">
+      <div class="table-header">
+        <span class="table-count">{{ movimientosFiltrados.length }} movimientos</span>
+        <span class="table-actions">
+          <button class="btn-export" (click)="exportarMovimientos()">📊 Exportar CSV</button>
+        </span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Código</th>
+              <th>Categoría</th>
+              <th>Marca</th>
+              <th>Tipo</th>
+              <th>Cantidad</th>
+              <th>Motivo</th>
+              <th>Fecha</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of movimientosFiltrados">
+              <td><strong>{{ m.productoNombre || 'Producto' }}</strong></td>
+              <td>{{ m.productoCodigo || '-' }}</td>
+              <td>{{ m.categoriaNombre || '-' }}</td>
+              <td>{{ m.marcaNombre || '-' }}</td>
+              <td>
+                <span class="type-badge" [class.entrada]="m.tipoMovimiento === 'ENTRADA'" [class.salida]="m.tipoMovimiento === 'SALIDA'">
+                  {{ m.tipoMovimiento || 'N/A' }}
+                </span>
+              </td>
+              <td><span class="cantidad">{{ m.cantidad || 0 }}</span></td>
+              <td>{{ m.motivo || '-' }}</td>
+              <td>{{ m.fechaMovimiento | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td class="text-center">
+                <button class="btn-delete" (click)="eliminarMovimiento(m.id)" title="Eliminar">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="movimientosFiltrados.length === 0">
+              <td colspan="9" class="text-center text-muted">
+                <div class="empty-state">
+                  <span class="empty-icon">📊</span>
+                  <p>No hay movimientos que coincidan con los filtros</p>
+                  <button class="btn-clear" (click)="limpiarFiltros()">Limpiar filtros</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODAL (sin cambios) -->
+    <div class="modal-overlay" *ngIf="modalVisible" (click)="cerrarModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>➕ Nuevo Movimiento</h3>
+          <button class="btn-close" (click)="cerrarModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div *ngFor="let error of formErrors" class="error-msg">{{ error }}</div>
+
+          <div class="form-group">
+            <label>Producto *</label>
+            <select [(ngModel)]="movimientoSeleccionado.productoId">
+              <option [value]="null">Seleccionar producto</option>
+              <option *ngFor="let p of productos" [value]="p.id">
+                {{ p.codigo }} - {{ p.nombre }} (Stock: {{ p.stockActual }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Tipo de Movimiento *</label>
+            <select [(ngModel)]="movimientoSeleccionado.tipoMovimientoId">
+              <option [value]="null">Seleccionar tipo</option>
+              <option *ngFor="let t of tiposMovimiento" [value]="t.id">
+                {{ t.nombre }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1; margin-right: 10px;">
+              <label>Cantidad *</label>
+              <input type="number" [(ngModel)]="movimientoSeleccionado.cantidad" min="1" placeholder="10">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>Motivo</label>
+              <input type="text" [(ngModel)]="movimientoSeleccionado.motivo" placeholder="Compra, Venta, Ajuste">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Observación</label>
+            <textarea [(ngModel)]="movimientoSeleccionado.observacion" placeholder="Observación opcional"></textarea>
+          </div>
+
+          <div *ngIf="movimientoSeleccionado.productoId && movimientoSeleccionado.tipoMovimientoId === 2" class="alert-stock">
+            <span *ngIf="verificarStock(movimientoSeleccionado.productoId, movimientoSeleccionado.cantidad, 2)" class="text-success">
+              ✅ Stock suficiente para esta salida
+            </span>
+            <span *ngIf="!verificarStock(movimientoSeleccionado.productoId, movimientoSeleccionado.cantidad, 2)" class="text-danger">
+              ⚠️ Stock insuficiente para esta salida
+            </span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+          <button class="btn-primary" (click)="guardarMovimiento()" [disabled]="loading">
+            {{ loading ? 'Registrando...' : 'Registrar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

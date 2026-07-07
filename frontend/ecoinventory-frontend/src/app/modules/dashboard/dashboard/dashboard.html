@@ -1,0 +1,211 @@
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2 class="logo">EcoInventory</h2>
+    <nav>
+      <a routerLink="/dashboard" class="active">🏠 Dashboard</a>
+      <a routerLink="/productos">📦 Productos</a>
+      <a routerLink="/categorias">📂 Categorías</a>
+      <a routerLink="/marcas">🏷️ Marcas</a>
+      <a routerLink="/proveedores">🚚 Proveedores</a>
+      <a routerLink="/movimientos">📊 Movimientos</a>
+      <a routerLink="/reportes">📈 Reportes</a>
+      <a routerLink="/usuarios">👤 Usuarios</a>
+      <a (click)="logout()" style="cursor: pointer;">🚪 Cerrar Sesión</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1>📊 Dashboard</h1>
+        <p class="text-muted">Bienvenido, {{ usuario.nombres || 'Administrador' }}</p>
+      </div>
+      <div class="date-badge">{{ fechaActual | date:'dd/MM/yyyy HH:mm' }}</div>
+    </header>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando datos...</p>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <section class="summary-cards" *ngIf="!loading">
+      <div class="summary-card" style="background: linear-gradient(135deg, #1a237e, #0d47a1);">
+        <div class="summary-icon">📦</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalProductos }}</span>
+          <span class="summary-label">Productos</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #dc2626, #b91c1c); cursor: pointer;" (click)="verStockBajo()">
+        <div class="summary-icon">⚠️</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ stockBajo }}</span>
+          <span class="summary-label">Stock Bajo</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #16a34a, #15803d);">
+        <div class="summary-icon">📂</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalCategorias }}</span>
+          <span class="summary-label">Categorías</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+        <div class="summary-icon">📊</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalMovimientos }}</span>
+          <span class="summary-label">Movimientos</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+        <div class="summary-icon">🚚</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalProveedores }}</span>
+          <span class="summary-label">Proveedores</span>
+        </div>
+      </div>
+      <div class="summary-card" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+        <div class="summary-icon">👤</div>
+        <div class="summary-info">
+          <span class="summary-value">{{ totalUsuarios }}</span>
+          <span class="summary-label">Usuarios</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alerta de Stock Bajo -->
+    <div *ngIf="!loading && mostrarAlerta && productosStockBajo.length > 0" class="alert-stock">
+      <div class="alert-content">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-text">
+          <strong>¡Alerta de Stock Bajo!</strong>
+          <span>Hay <strong>{{ productosStockBajo.length }}</strong> productos que necesitan reabastecimiento.</span>
+        </div>
+        <button class="btn-alert" (click)="verStockBajo()">Ver productos</button>
+        <button class="btn-close-alert" (click)="cerrarAlerta()">✕</button>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <section class="charts" *ngIf="!loading">
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h4>📈 Movimientos (últimos 6 meses)</h4>
+          </div>
+          <div class="chart-container">
+            <canvas #chartMovimientos></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h4>📊 Productos por Categoría</h4>
+          </div>
+          <div class="chart-container">
+            <canvas #chartCategorias></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h4>📊 Estado del Stock</h4>
+          </div>
+          <div class="chart-container-small">
+            <canvas #chartStock></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h4>📋 Resumen Rápido</h4>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-icon">⬆️</span>
+              <div>
+                <p class="summary-value">{{ entradas }}</p>
+                <small>Entradas</small>
+              </div>
+            </div>
+            <div class="summary-item">
+              <span class="summary-icon">⬇️</span>
+              <div>
+                <p class="summary-value">{{ salidas }}</p>
+                <small>Salidas</small>
+              </div>
+            </div>
+            <div class="summary-item">
+              <span class="summary-icon">🏷️</span>
+              <div>
+                <p class="summary-value">{{ totalMarcas }}</p>
+                <small>Marcas</small>
+              </div>
+            </div>
+            <div class="summary-item">
+              <span class="summary-icon">📦</span>
+              <div>
+                <p class="summary-value">{{ totalProductos }}</p>
+                <small>Productos</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Últimos Movimientos -->
+    <section class="movimientos" *ngIf="!loading">
+      <div class="section-header">
+        <h4>🔄 Últimos Movimientos</h4>
+        <span class="section-action" routerLink="/movimientos">Ver todos →</span>
+      </div>
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Usuario</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of ultimosMovimientos">
+                <td><strong>{{ m.productoNombre || 'Producto' }}</strong></td>
+                <td>
+                  <span class="type-badge" [class.entrada]="m.tipoMovimiento === 'ENTRADA'" [class.salida]="m.tipoMovimiento === 'SALIDA'">
+                    {{ m.tipoMovimiento || 'N/A' }}
+                  </span>
+                </td>
+                <td>{{ m.cantidad || 0 }}</td>
+                <td>{{ m.usuarioNombre || '-' }}</td>
+                <td>{{ m.fechaMovimiento | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+              <tr *ngIf="ultimosMovimientos.length === 0">
+                <td colspan="5" class="text-center text-muted">
+                  <div class="empty-state">
+                    <span class="empty-icon">📊</span>
+                    <p>No hay movimientos registrados</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
