@@ -10,8 +10,6 @@ frontend/ecoinventory-frontend/coverage/
 # SPRING BOOT
 # ==========================
 backend/EcoInventoryPro/target/
-backend/EcoInventoryPro/.mvn/
-
 # ==========================
 # IDEs
 # ==========================
