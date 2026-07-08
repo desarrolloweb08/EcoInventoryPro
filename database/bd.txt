@@ -1,0 +1,234 @@
+-- =========================================================
+-- ECOINVENTORY PRO - MIGRACIÓN A SUPABASE (POSTGRESQL)
+-- FECHA: 2026-07-07
+-- =========================================================
+
+-- =====================================================
+-- TABLA: categoria
+-- =====================================================
+
+DROP TABLE IF EXISTS categoria CASCADE;
+CREATE TABLE categoria (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(250),
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO categoria (id, nombre, descripcion, estado, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'LAPTOPS', 'Productos electrónicos', TRUE, '2026-07-04 11:46:27', '2026-07-05 12:17:31'),
+(2, 'MONITORES', 'Perifericos', TRUE, '2026-07-04 11:46:27', '2026-07-05 12:17:57'),
+(3, 'IMPRESORAS', 'Perifericos', TRUE, '2026-07-04 11:46:27', '2026-07-05 13:18:59'),
+(5, 'TELEFONOS', 'Todo tipo de celulares', TRUE, '2026-07-05 13:19:24', '2026-07-05 13:19:24'),
+(6, 'ACCESORIOS', 'Todo tipo de accesorios, mouse, teclados, etc', TRUE, '2026-07-05 13:19:52', '2026-07-05 13:19:52');
+
+-- Reiniciar secuencia
+SELECT setval('categoria_id_seq', (SELECT COALESCE(MAX(id), 0) FROM categoria));
+
+-- =====================================================
+-- TABLA: marca
+-- =====================================================
+
+DROP TABLE IF EXISTS marca CASCADE;
+CREATE TABLE marca (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(250),
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO marca (id, nombre, descripcion, estado, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'ASUS', 'MARCA DE LAPTOS ASUS', TRUE, '2026-07-04 12:10:21', '2026-07-04 12:10:21'),
+(2, 'LENOVO', 'MARCA A1', TRUE, '2026-07-05 12:20:12', '2026-07-05 12:20:12'),
+(3, 'ACER', 'LAPTOPS Y MONITORES', TRUE, '2026-07-05 13:16:10', '2026-07-05 13:17:17'),
+(4, 'SAMSUNG', 'teléfonos celulares y tabletas', TRUE, '2026-07-05 13:16:36', '2026-07-05 13:16:36'),
+(5, 'HP', 'LAPTOPS E IMPRESORAS', TRUE, '2026-07-05 13:16:51', '2026-07-05 13:16:51'),
+(6, 'APLLE', 'IPHONE Y MACCBOKS', TRUE, '2026-07-05 13:17:32', '2026-07-05 13:17:32');
+
+SELECT setval('marca_id_seq', (SELECT COALESCE(MAX(id), 0) FROM marca));
+
+-- =====================================================
+-- TABLA: proveedor
+-- =====================================================
+
+DROP TABLE IF EXISTS proveedor CASCADE;
+CREATE TABLE proveedor (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    ruc VARCHAR(11) NOT NULL UNIQUE,
+    telefono VARCHAR(20),
+    correo VARCHAR(150),
+    direccion VARCHAR(250),
+    descripcion VARCHAR(255),
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO proveedor (id, nombre, ruc, telefono, correo, direccion, descripcion, estado, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'GRUPO DELTRON', '20659845621', '983096713', NULL, 'Av garcilazo - Lima', 'Proveedor número 1 en tecnología', TRUE, '2026-07-04 12:27:04', '2026-07-05 13:17:48'),
+(2, 'PHONIX PERU SAC', '20659845622', '953096713', NULL, 'Av garcilazo - Lima', 'empresa de tecnologia', TRUE, '2026-07-05 12:21:44', '2026-07-05 12:21:44'),
+(3, 'INGRAM MICRO', '20549832654', '985365745', NULL, 'Av paseo de la republica 450', 'Empresa mayorista en tecnologia', TRUE, '2026-07-05 13:18:46', '2026-07-05 13:18:46');
+
+SELECT setval('proveedor_id_seq', (SELECT COALESCE(MAX(id), 0) FROM proveedor));
+
+-- =====================================================
+-- TABLA: rol
+-- =====================================================
+
+DROP TABLE IF EXISTS rol CASCADE;
+CREATE TABLE rol (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(200),
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO rol (id, nombre, descripcion, estado, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'Administrador', 'Acceso completo al sistema', TRUE, '2026-07-02 11:59:23', '2026-07-02 11:59:23'),
+(2, 'Almacenero', 'Gestiona productos y movimientos', TRUE, '2026-07-02 11:59:23', '2026-07-02 11:59:23');
+
+SELECT setval('rol_id_seq', (SELECT COALESCE(MAX(id), 0) FROM rol));
+
+-- =====================================================
+-- TABLA: usuario
+-- =====================================================
+
+DROP TABLE IF EXISTS usuario CASCADE;
+CREATE TABLE usuario (
+    id BIGSERIAL PRIMARY KEY,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    rol_id BIGINT NOT NULL,
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usuario_rol FOREIGN KEY (rol_id) REFERENCES rol(id)
+);
+
+INSERT INTO usuario (id, nombres, apellidos, correo, username, password, rol_id, estado, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'Administrador', 'Sistema', 'admin@ecoinventory.com', 'admin', 'admin123', 1, TRUE, '2026-07-02 11:59:23', '2026-07-04 10:46:38'),
+(2, 'CARLOS', 'MEGO', 'carlos@gmail.com', 'carlos01', '12345', 2, TRUE, '2026-07-04 12:56:54', '2026-07-04 12:56:54'),
+(3, 'Roberto', 'Mego', 'mego@gmail.com', 'mego', '123456', 1, TRUE, '2026-07-04 12:59:56', '2026-07-04 12:59:56');
+
+SELECT setval('usuario_id_seq', (SELECT COALESCE(MAX(id), 0) FROM usuario));
+
+-- =====================================================
+-- TABLA: producto
+-- =====================================================
+
+DROP TABLE IF EXISTS producto CASCADE;
+CREATE TABLE producto (
+    id BIGSERIAL PRIMARY KEY,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT,
+    precio_compra DECIMAL(10,2) NOT NULL,
+    precio_venta DECIMAL(10,2) NOT NULL,
+    stock_actual INT NOT NULL DEFAULT 0,
+    stock_minimo INT NOT NULL DEFAULT 0,
+    categoria_id BIGINT NOT NULL,
+    marca_id BIGINT NOT NULL,
+    proveedor_id BIGINT NOT NULL,
+    imagen VARCHAR(255),
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (categoria_id) REFERENCES categoria(id),
+    CONSTRAINT fk_producto_marca FOREIGN KEY (marca_id) REFERENCES marca(id),
+    CONSTRAINT fk_producto_proveedor FOREIGN KEY (proveedor_id) REFERENCES proveedor(id)
+);
+
+INSERT INTO producto (id, codigo, nombre, descripcion, precio_compra, precio_venta, stock_actual, stock_minimo, categoria_id, marca_id, proveedor_id, imagen, estado, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'UM3406KA-WS79T-D', 'ASUS ZENBOOK UM3406KA', 'AMD RYZEN AI 7 350 HASTA 5.0GHZ 1TB SSD 32GB DDR5 GRÁFICOS AMD RADEON 860M PANTALLA TÁCTIL OLED 14 WUXGA (1920X1200) WINDOWS 11 COLOR NEGRO JADE.', 500.00, 600.00, 15, 10, 1, 1, 1, NULL, TRUE, '2026-07-04 12:44:45', '2026-07-04 12:49:15'),
+(2, '64CBKAR6LA', 'LENOVO THINKVISION S22-4E MONITOR', '21.5-INCH FULL HD IPS MONITOR 1920 X 1080 RESOLUTION 100HZ REFRESH RATE 99% SRGB COLOR GAMUT 1300:1 CONTRAST RATIO HDMI AND VGA CONNECTIVITY LOW BLUE LIGHT AND FLICKER-FREE TECHNOLOGY IDEAL FOR BUSINESS PRODUCTIVITY AND EVERYDAY COMPUTING.', 400.00, 500.00, 0, 5, 2, 2, 2, NULL, TRUE, '2026-07-05 12:19:53', '2026-07-05 12:22:10'),
+(3, 'MW0X3LL/A', 'APPLE MACBOOK AIR 13 PLATA', 'APPLE M4 10-CORE CPU 10-CORE GPU 512GB SSD 16GB RAM 13.6 LIQUID RETINA (2560 X 1664) MACOS COLOR SILVER', 5000.00, 6500.00, 0, 5, 1, 6, 2, NULL, TRUE, '2026-07-05 13:20:58', '2026-07-05 13:20:58'),
+(4, 'MFXJ4LL/A', 'APPLE IPHONE 17 PRO MAX 256GB DEEP BLUE', 'CHIP A19 PRO 12GB RAM 256GB DE ALMACENAMIENTO PANTALLA OLED SUPER RETINA XDR DE 6.9″ 120HZ TRIPLE CÁMARA TRASERA DE 48MP (PRINCIPAL + ULTRA GRANDE + TELEFOTO 4X TILE‑PRISM) CÁMARA FRONTAL CENTER‑STAGE DE 18MP RESISTENCIA AL AGUA Y POLVO IP68 CARGA RÁPIDA USB‑C + MAGSAFE IOS 26 COLOR AZUL PROFUNDO', 6000.00, 7500.00, 25, 15, 5, 6, 3, NULL, TRUE, '2026-07-05 13:22:19', '2026-07-05 13:24:36'),
+(5, 'SM-A165MZKDTPA', 'SAMSUNG GALAXY A16 128GB LTE BLACK', 'OCTA CORE 2.2GHZ 128GB DE ALMACENAMIENTO 4GB RAM 6.7 FHD+ (1080 x 2340) DUAL SIM ANDROID COLOR NEGRO ESPECIFICACIONES LATINAS', 500.00, 690.00, 0, 20, 5, 4, 3, NULL, TRUE, '2026-07-05 13:26:30', '2026-07-05 13:26:30');
+
+SELECT setval('producto_id_seq', (SELECT COALESCE(MAX(id), 0) FROM producto));
+
+-- =====================================================
+-- TABLA: tipo_movimiento
+-- =====================================================
+
+DROP TABLE IF EXISTS tipo_movimiento CASCADE;
+CREATE TABLE tipo_movimiento (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(200),
+    estado BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+INSERT INTO tipo_movimiento (id, nombre, descripcion, estado) VALUES
+(1, 'ENTRADA', 'Ingreso de productos al almacén', TRUE),
+(2, 'SALIDA', 'Salida de productos del almacén', TRUE);
+
+SELECT setval('tipo_movimiento_id_seq', (SELECT COALESCE(MAX(id), 0) FROM tipo_movimiento));
+
+-- =====================================================
+-- TABLA: movimiento
+-- =====================================================
+
+DROP TABLE IF EXISTS movimiento CASCADE;
+CREATE TABLE movimiento (
+    id BIGSERIAL PRIMARY KEY,
+    producto_id BIGINT NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    tipo_movimiento_id BIGINT NOT NULL,
+    cantidad INT NOT NULL,
+    costo_unitario DECIMAL(10,2),
+    motivo VARCHAR(100),
+    observacion VARCHAR(300),
+    fecha_movimiento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_movimiento_producto FOREIGN KEY (producto_id) REFERENCES producto(id),
+    CONSTRAINT fk_movimiento_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+    CONSTRAINT fk_movimiento_tipo FOREIGN KEY (tipo_movimiento_id) REFERENCES tipo_movimiento(id)
+);
+
+INSERT INTO movimiento (id, producto_id, usuario_id, tipo_movimiento_id, cantidad, costo_unitario, motivo, observacion, fecha_movimiento, fecha_creacion, fecha_actualizacion) VALUES
+(1, 1, 1, 1, 15, 500.00, 'COMPRA AL PROVEEDOR DELTRON', 'Se realizó la compra por falta de stock', '2026-07-04 12:49:15', '2026-07-04 12:49:15', '2026-07-04 12:49:15'),
+(2, 4, 1, 1, 30, 6000.00, 'SE REALIZÓ UNA COMPRA A PHONIX PERI', 'Esta compra fue realizada por falta de stock', '2026-07-05 13:23:50', '2026-07-05 13:23:50', '2026-07-05 13:23:50'),
+(3, 4, 1, 2, 5, 6000.00, 'Venta al infotec', 'La venta fue realizada a través de tik tok', '2026-07-05 13:24:36', '2026-07-05 13:24:36', '2026-07-05 13:24:36');
+
+SELECT setval('movimiento_id_seq', (SELECT COALESCE(MAX(id), 0) FROM movimiento));
+
+-- =====================================================
+-- TABLA: configuracion
+-- =====================================================
+
+DROP TABLE IF EXISTS configuracion CASCADE;
+CREATE TABLE configuracion (
+    id BIGSERIAL PRIMARY KEY,
+    nombre_empresa VARCHAR(150) NOT NULL,
+    ruc VARCHAR(11),
+    direccion VARCHAR(250),
+    telefono VARCHAR(20),
+    stock_minimo_global INT DEFAULT 5,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO configuracion (id, nombre_empresa, ruc, direccion, telefono, stock_minimo_global, fecha_creacion, fecha_actualizacion) VALUES
+(1, 'EcoInventory Pro', '20123456789', 'Av. Javier Prado 123 - Lima', '999999999', 5, '2026-07-02 11:59:23', '2026-07-02 11:59:23');
+
+SELECT setval('configuracion_id_seq', (SELECT COALESCE(MAX(id), 0) FROM configuracion));
+
+-- =====================================================
+-- VERIFICACIÓN: Mostrar todas las tablas creadas
+-- =====================================================
+
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' 
+ORDER BY table_name;
